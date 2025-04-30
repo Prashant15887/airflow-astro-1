@@ -5,6 +5,7 @@ from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import BranchPythonOperator
 import time
 from airflow.sensors.date_time import DateTimeSensor
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 partners = {
     "partner_snowflake": {
@@ -95,6 +96,16 @@ def my_dag_8():
     #stop = EmptyOperator(task_id="stop")
 
     storing = EmptyOperator(task_id="storing", trigger_rule="none_failed_or_skipped")
+
+    trigger_cleaning_xcoms = TriggerDagRunOperator(
+        task_id='trigger_cleaning_xcoms',
+        trigger_dag_id='cleaning_dag',
+        execution_date='{{ ds }}',
+        wait_for_completion=True,
+        poke_interval=60,
+        reset_dag_run=True,
+        failed_states=['failed']
+    )
 
     #choosing_partner_based_on_day >> stop
 
